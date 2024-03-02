@@ -16,15 +16,19 @@ namespace KidProEdu.Domain.Entities
         public string Name { get; set; }
         public string Description { get; set; }
         public int DurationTotal { get; set; }
-        public string Syllabus { get; set; }
-        public int? Discount { get; set; }
-        public string Level { get; set; }
+        public string? Syllabus { get; set; }
+        public string? Level { get; set; }
         public string? EntryPoint { get; set; }
-        public IList<Prerequisite> Prerequisites { get; set; }
+        public string? Prerequisite { get; set; }
+        public string? Image { get; set; }
+        public CourseType CourseType { get; set; }
+        public Guid ParentCourse { get; set; }
         public IList<Rating> Ratings { get; set; }
-        public IList<TrainingProgramCourse> TrainingProgramCourses { get; set; }
         public IList<SemesterCourse> SemesterCourses { get; set; }
         public IList<Class> Classes { get; set; }
         public IList<Lesson> Lessons { get; set; }
+        public IList<Score> Scores { get; set; }
+        public IList<OrderDetail> OrderDetails { get; set; }
+        public Certificate Certificate { get; set; }
     }
 }

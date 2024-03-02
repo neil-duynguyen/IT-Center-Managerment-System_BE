@@ -10,10 +10,12 @@ namespace KidProEdu.Domain.Entities
 {
     public class Blog : BaseEntity
     {
-        [ForeignKey("User")]
+        [ForeignKey("UserAccount")]
         public Guid UserId { get; set; }
         public string Content { get; set; }
-        public virtual User User { get; set; }
-        public IList<BlogTag> BlogTags { get; set; }
+        public string? Image { get; set; }
+        public string Title { get; set; }
+        public virtual UserAccount UserAccount { get; set; }
+        public IList<Tag> Tags { get; set; }
     }
 }

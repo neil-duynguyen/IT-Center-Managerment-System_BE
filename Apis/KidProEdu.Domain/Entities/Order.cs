@@ -1,5 +1,7 @@
-﻿using System;
+﻿using KidProEdu.Domain.Enums;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,11 +10,13 @@ namespace KidProEdu.Domain.Entities
 {
     public class Order : BaseEntity
     {
-        public string? Code { get; set; }
-        public string? Name { get; set; }
-        public DateTime? ImportDate { get; set; }
-        public DateTime? WarrantyDate { get; set; }
-
-        public IList<Equipment> Equipments { get; set; }
+        [ForeignKey("UserAccount")]
+        public Guid UserId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public double TotalAmount { get; set; }
+        public StatusPayment PaymentStatus { get; set; }
+        public virtual UserAccount UserAccount { get; set; }
+        public IList<OrderDetail> OrderDetails { get; set; }
+        public IList<Transaction> Transactions { get; set; }
     }
 }

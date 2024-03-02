@@ -10,18 +10,16 @@ namespace KidProEdu.Domain.Entities
 {
     public class Request : BaseEntity
     {
-        [ForeignKey("User")]
-        public Guid UserId { get; set; }
         public string? RequestDescription { get; set; }
-        public StatusOfRequest? Status {  get; set; }
+        public StatusOfRequest? Status { get; set; }
         public string? RequestType { get; set; }
         public DateTime? LeaveDate { get; set; }
         public string? EquimentType { get; set; }
         public Guid? LocationId { get; set; }
         public Guid? ClassId { get; set; }
         public Guid? ScheduleId { get; set; }
+        public DateTime? TeachingDay { get; set; }
         public Guid? ReceiverRefundId { get; set; }
-
-        public virtual User User { get; set; }
+        public IList<RequestUserAccount> RequestUserAccounts { get; set; }
     }
 }

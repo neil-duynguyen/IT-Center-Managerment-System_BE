@@ -12,8 +12,10 @@ namespace KidProEdu.Domain.Entities
         [ForeignKey("Course")]
         public Guid? CourseId { get; set; }
         [ForeignKey("Semester")]
-        public Guid? SemesterId { get; set; }
-        public virtual Course? Course { get; set; }
-        public virtual Semester? Semester { get; set; }
+        public Guid SemesterId { get; set; }
+        [ForeignKey("Course")]
+        public Guid CourseId { get; set; }     
+        public virtual Semester Semester { get; set; }
+        public virtual Course Course { get; set; }
     }
 }
