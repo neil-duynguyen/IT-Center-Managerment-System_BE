@@ -32,6 +32,18 @@ namespace KidProEdu.API.Controllers.Manager
             }
             return Ok(Class);
         }
+        
+        [HttpGet("GetClassBySemester/{id}")]
+        /*[Authorize(Roles = ("Admin"))]*/
+        public async Task<IActionResult> GetClassBySemester(Guid id)
+        {
+            var Class = await _classService.GetClassBySemester(id);
+            if (Class == null)
+            {
+                return NotFound();
+            }
+            return Ok(Class);
+        }
 
         [HttpPost]
         /*[Authorize(Roles = ("Admin"))]*/
@@ -119,6 +131,13 @@ namespace KidProEdu.API.Controllers.Manager
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpGet("GetChildrenByClassId/{classId}")]
+        public async Task<IActionResult> GetChildrenByClassId(Guid classId)
+        {
+            var result = await _classService.GetChildrenByClassId(classId);
+            return Ok(result);
         }
     }
 }

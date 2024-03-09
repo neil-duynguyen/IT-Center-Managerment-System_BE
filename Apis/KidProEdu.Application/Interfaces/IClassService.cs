@@ -13,8 +13,10 @@ namespace KidProEdu.Application.Interfaces
         Task<List<ClassViewModel>> GetClasses();
         Task<bool> CreateClass(CreateClassViewModel createClassViewModel);
         Task<bool> UpdateClass(UpdateClassViewModel updateClassViewModel);
-        Task<Class> GetClassById(Guid ClassId);
+        Task<ClassViewModel> GetClassById(Guid ClassId);
         Task<bool> DeleteClass(Guid ClassId);
         Task<bool> ChangeStatusClass(ChangeStatusClassViewModel changeStatusClassViewModel);
+        Task<List<ClassViewModel>> GetClassBySemester(Guid id);
+        Task<List<ClassChildrenViewModel>> GetChildrenByClassId(Guid classId);
     }
 }

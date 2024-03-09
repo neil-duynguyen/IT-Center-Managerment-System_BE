@@ -23,7 +23,7 @@ namespace KidProEdu.API.Controllers
             try
             {
                 var result = await _childrenService.CreateChildren(createChildrenViewModel);
-                return Ok("Tạo trẻ thành công.");
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -48,5 +48,19 @@ namespace KidProEdu.API.Controllers
             }
         }
 
+        [HttpGet("GetChildrensByStaffId")]
+        [Authorize(Roles = ("Staff"))]
+        public async Task<IActionResult> GetChildrensByStaffId()
+        {
+            try
+            {
+                var result = await _childrenService.GetChildrensByStaffId();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

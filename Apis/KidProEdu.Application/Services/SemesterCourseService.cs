@@ -31,19 +31,44 @@ namespace KidProEdu.Application.Services
 
         public async Task<bool> AddCourse(CreateSemesterCourseViewModel createSemesterCourseView)
         {
-            List<SemesterCourse> listSemesterCourse = new List<SemesterCourse>();
-            foreach (var course in createSemesterCourseView.CourseId)
+            var getCourseId = _unitOfWork.SemesterCourseRepository.GetAllAsync().Result.Where(x => x.SemesterId == createSemesterCourseView.SemesterId && !x.IsDeleted).Select(x => x.CourseId).ToList();
+
+            /*foreach (var item in createSemesterCourseView.CourseId)
             {
-               listSemesterCourse.Add(new SemesterCourse() { SemesterId = createSemesterCourseView.SemesterId, CourseId = course});
+                bool isFound = false;
+                foreach (var course in getSemestersCourse)
+                {
+                    if (item == course)
+                    {
+                        isFound = true;
+                        break;
+                    }
+                }
+
+                if (!isFound)
+                {
+                    await _unitOfWork.SemesterCourseRepository.AddAsync(new SemesterCourse() { SemesterId = createSemesterCourseView.SemesterId, CourseId = item });
+                }
+            }*/
+
+            //except lấy ra phần tử riêng của 2 mảng
+            var result = createSemesterCourseView.CourseId.Except(getCourseId).ToList();
+
+            List<SemesterCourse> listSemesterCourse = new List<SemesterCourse>();
+
+            foreach (var courseId in result)
+            {
+                listSemesterCourse.Add(new SemesterCourse() { SemesterId = createSemesterCourseView.SemesterId, CourseId = courseId });
             }
 
             await _unitOfWork.SemesterCourseRepository.AddRangeAsync(listSemesterCourse);
+
             return await _unitOfWork.SaveChangeAsync() > 0 ? true : throw new Exception("Gán Course thất bại.");
         }
 
         public async Task<List<CourseViewModel>> GetSemesterCourseById(Guid Id)
         { 
-            var listCourseId = _unitOfWork.SemesterCourseRepository.GetAllAsync().Result.Where(x => x.SemesterId == Id).Select(x => x.CourseId).ToList();
+            var listCourseId = _unitOfWork.SemesterCourseRepository.GetAllAsync().Result.Where(x => x.SemesterId == Id && !x.IsDeleted).Select(x => x.CourseId).ToList();
 
             List<CourseViewModel> listCourse = new List<CourseViewModel>();
 
@@ -54,12 +79,17 @@ namespace KidProEdu.Application.Services
             return listCourse;
         }
 
-        public async Task<bool> UpdateCourseInSemester(CreateSemesterCourseViewModel createSemesterCourseView)
+        public async Task<bool> DeleteSemesterCourse(Guid courseId)
         {
-            /*var findSemester = _unitOfWork.SemesterCourseRepository.GetAllAsync().Result.Where(x => x.SemesterId == createSemesterCourseView.SemesterId).ToList();*/
+            var result = await _unitOfWork.SemesterCourseRepository.GetByIdAsync(courseId);
 
-            
-            return await _unitOfWork.SaveChangeAsync() > 0 ? true : throw new Exception("Cập nhật thất bại.");
+            if (result == null)
+                throw new Exception("Không tìm thấy Course");
+            else
+            {
+                _unitOfWork.SemesterCourseRepository.SoftRemove(result);
+                return await _unitOfWork.SaveChangeAsync() > 0 ? true : throw new Exception("Xoá Course khỏi kì thất bại.");
+            }
         }
     }
 }

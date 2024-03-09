@@ -65,15 +65,21 @@ namespace KidProEdu.Application.Services
             }
         }
 
-        public async Task<Class> GetClassById(Guid ClassId)
+        public async Task<ClassViewModel> GetClassById(Guid ClassId)
         {
-            var Class = await _unitOfWork.ClassRepository.GetByIdAsync(ClassId);
-            return Class;
+            var getClass = await _unitOfWork.ClassRepository.GetByIdAsync(ClassId);
+            return _mapper.Map<ClassViewModel>(getClass); ;
         }
 
         public async Task<List<ClassViewModel>> GetClasses()
         {
             var Classs = _unitOfWork.ClassRepository.GetAllAsync().Result.Where(x => x.IsDeleted == false).OrderByDescending(x => x.CreationDate).ToList();
+            return _mapper.Map<List<ClassViewModel>>(Classs);
+        }
+
+        public async Task<List<ClassViewModel>> GetClassBySemester(Guid id)
+        {
+            var Classs = _unitOfWork.ClassRepository.GetAllAsync().Result.Where(x => x.IsDeleted == false && x.SemesterId == id).OrderByDescending(x => x.CreationDate).ToList();
             return _mapper.Map<List<ClassViewModel>>(Classs);
         }
 
@@ -91,6 +97,15 @@ namespace KidProEdu.Application.Services
 
             var findClass = await _unitOfWork.ClassRepository.GetByIdAsync(updateClassViewModel.Id)
                 ?? throw new Exception("Không tìm thấy lớp");
+
+            if (updateClassViewModel.MaxNumber < findClass.ActualNumber)
+            {
+                throw new Exception("Số lượng học sinh tối đa không thể nhỏ hơn số lượng học sinh thực tế đang có trong lớp");
+            }
+            /*else if (updateClassViewModel.MaxNumber < findClass.ExpectedNumber)
+            {
+                throw new Exception("Số lượng học sinh dự kiến không thể lớn hơn số lượng học tối đa của lớp");
+            }*/
 
             var existingClass = await _unitOfWork.ClassRepository.GetClassByClassCode(updateClassViewModel.ClassCode);
             if (!existingClass.IsNullOrEmpty())
@@ -144,6 +159,14 @@ namespace KidProEdu.Application.Services
             }
 
             return await _unitOfWork.SaveChangeAsync() > 0 ? true : throw new Exception("Cập nhật trạng thái lớp thất bại");
+        }
+
+        //api này dùng để get childen trong classid
+        public async Task<List<ClassChildrenViewModel>> GetChildrenByClassId(Guid classId)
+        {
+            var result = _unitOfWork.EnrollmentRepository.GetAllAsync().Result.Where(x => x.ClassId == classId).ToList();
+            var mapper = _mapper.Map<List<ClassChildrenViewModel>>(result);
+            return mapper;
         }
     }
 }

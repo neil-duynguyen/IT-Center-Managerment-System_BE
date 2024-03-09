@@ -29,8 +29,12 @@ namespace Infrastructures
         private readonly ICourseRepository _courseRepository;
         private readonly ISemesterCourseRepository _semesterCourseRepository;
         private readonly IClassRepository _classRepository;
+        private readonly IRequestUserAccountRepository _requestUserAccountRepository;
         private readonly IDocumentRepository _documentRepository;
         private readonly ILogEquipmentRepository _logEquipmentRepository;
+        private readonly IAdviseRequestRepository _adviseRequestRepository;
+        private readonly IDivisionUserAccountRepository _divisionUserAccountRepository;
+        private readonly IEnrollmentRepository _enrollmentRepository;
 
         public UnitOfWork(AppDbContext dbContext, IUserRepository userRepository, IRoleRepository roleRepository, ITagRepository tagRepository,
             ILocationRepository locationRepository, ICategoryEquipmentRepository categoryEquipmentRepository
@@ -40,7 +44,8 @@ namespace Infrastructures
             , INotificationUserRepository notificationUserRepository, IRatingRepository ratingRepository, IDivisionRepository divisionRepository
             , ILessonRepository lessonRepository, IQuestionRepository questionRepository, IRequestRepository requestRepository,
             ICourseRepository courseRepository, ISemesterCourseRepository semesterCourseRepository, IClassRepository classRepository
-            , IDocumentRepository documentRepository, ILogEquipmentRepository logEquipmentRepository)
+            , IRequestUserAccountRepository requestUserAccountRepository, IDocumentRepository documentRepository
+            , ILogEquipmentRepository logEquipmentRepository, IAdviseRequestRepository adviseRequestRepository, IDivisionUserAccountRepository divisionUserAccountRepository, IEnrollmentRepository enrollmentRepository)
         {
             _dbContext = dbContext;
             _userRepository = userRepository;
@@ -63,8 +68,12 @@ namespace Infrastructures
             _courseRepository = courseRepository;
             _semesterCourseRepository = semesterCourseRepository;
             _classRepository = classRepository;
+            _requestUserAccountRepository = requestUserAccountRepository;
             _documentRepository = documentRepository;
             _logEquipmentRepository = logEquipmentRepository;
+            _adviseRequestRepository = adviseRequestRepository;
+            _divisionUserAccountRepository = divisionUserAccountRepository;
+            _enrollmentRepository = enrollmentRepository;
         }
 
         public IRoleRepository RoleRepository => _roleRepository;
@@ -95,18 +104,28 @@ namespace Infrastructures
         public IDivisionRepository DivisionRepository => _divisionRepository;
 
         public ILessonRepository LessonRepository => _lessonRepository;
+
         public ICourseRepository CourseRepository => _courseRepository;
 
         public ISemesterCourseRepository SemesterCourseRepository => _semesterCourseRepository;
+
         public IRequestRepository RequestRepository => _requestRepository;
 
         public IQuestionRepository QuestionRepository => _questionRepository;
 
         public IClassRepository ClassRepository => _classRepository;
 
+        public IRequestUserAccountRepository RequestUserAccountRepository => _requestUserAccountRepository;
+
         public IDocumentRepository DocumentRepository => _documentRepository;
 
         public ILogEquipmentRepository LogEquipmentRepository => _logEquipmentRepository;
+
+        public IAdviseRequestRepository AdviseRequestRepository => _adviseRequestRepository;
+
+        public IDivisionUserAccountRepository DivisionUserAccountRepository => _divisionUserAccountRepository;
+
+        public IEnrollmentRepository EnrollmentRepository => _enrollmentRepository;
 
         public async Task<int> SaveChangeAsync()
         {

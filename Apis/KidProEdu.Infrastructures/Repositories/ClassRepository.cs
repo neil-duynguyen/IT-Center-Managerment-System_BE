@@ -1,15 +1,8 @@
 ﻿using Infrastructures.Repositories;
 using KidProEdu.Application.Interfaces;
 using KidProEdu.Application.IRepositories;
-using KidProEdu.Application.ViewModels.ClassViewModels;
 using KidProEdu.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KidProEdu.Infrastructures.Repositories
 {
@@ -30,6 +23,11 @@ namespace KidProEdu.Infrastructures.Repositories
                 .ToListAsync();
 
             return requests;
+        }
+
+        public override async Task<Class> GetByIdAsync(Guid id)
+        { 
+            return await _dbContext.Class.Include(x => x.Course).Include(x => x.Enrollments).Where(x => !x.IsDeleted).FirstOrDefaultAsync(x => x.Id == id);
         }
     }
 }

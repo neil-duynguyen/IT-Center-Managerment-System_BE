@@ -16,7 +16,7 @@ namespace KidProEdu.API.Controllers.Admin
             _courseService = courseService;
         }
 
-        [HttpPost]
+        [HttpPost()]
         public async Task<IActionResult> PostCourse(CreateCourseViewModel createCourseView) 
         {
             try
@@ -29,13 +29,31 @@ namespace KidProEdu.API.Controllers.Admin
             }
         }
 
-        /*[HttpGet("Courses")]
-        *//*[Authorize(Roles = ("Parent"))]*//*
+        [HttpPost("CourseParent")]
+        public async Task<IActionResult> PostCourseParent(CreateCourseParentViewModel createCourseParentViewModel)
+        {
+            try
+            {
+                return await _courseService.CreateCourseParentAsync(createCourseParentViewModel) ? Ok("Course đã được tạo thành công.") : BadRequest("Course đã được tạo thất bại.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("Courses")]
         public async Task<IActionResult> GetAllCourse()
         {
             return Ok(await _courseService.GetAllCourse());
         }
-*/
+
+        [HttpGet("GetCourseById/{Id}")]
+        public async Task<IActionResult> GetCOurseById(Guid Id)
+        {
+            return Ok(await _courseService.GetCourseById(Id));
+        }
+
         [HttpDelete]
         public async Task<IActionResult> DeleteCourse(Guid courseId)
         {

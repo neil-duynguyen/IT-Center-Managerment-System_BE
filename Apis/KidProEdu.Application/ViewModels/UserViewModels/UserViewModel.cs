@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KidProEdu.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace KidProEdu.Application.ViewModels.UserViewModels
     {
         public Guid Id { get; set; }
         public string RoleName { get; set; }
+        public string LocationName { get; set; }
         public string UserName { get; set; }
         public string FullName { get; set; }
 
@@ -23,5 +25,6 @@ namespace KidProEdu.Application.ViewModels.UserViewModels
         public string? BankAccountName { get; set; }
         public string? BankName { get; set; }
         public string Status { get; set; }
+        public ICollection<ChildrenProfile> ChildrenProfiles { get; set; }
     }
 }
