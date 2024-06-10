@@ -11,8 +11,14 @@ namespace KidProEdu.Application.Interfaces
     {
         public Task<bool> CreateCourseAsync(CreateCourseViewModel createCourseViewModel);
         public Task<bool> CreateCourseParentAsync(CreateCourseParentViewModel createCourseParentViewModel);
+        Task<bool> UpdateCourseParentAsync(UpdateCourseParentViewModel updateCourseParentViewModel);
+        Task<bool> UpdateCourseAsync(UpdateCourseViewModel updateCourseViewModel);
         public Task<List<CourseViewModel>> GetAllCourse();
-        public Task<CourseViewModel> GetCourseById(Guid Id);
+        Task<List<CourseViewModel>> GetAllCourseInBlog();
+        Task<List<CourseViewModel>> GetAllCourseSingle();
+        public Task<List<CourseViewModel>> GetAllCourseByChildId(Guid childId);
+        public Task<CourseViewModelById> GetCourseById(Guid Id);
         Task<bool> DeleteCourseAsync(Guid courseId);
+        public Task<CourseSummariseDetailViewModel> CourseSummariseDetail(DateTime year);
     }
 }

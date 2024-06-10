@@ -13,6 +13,10 @@ using Microsoft.OpenApi.Models;
 using Infrastructures;
 using KidProEdu.Application.IRepositories;
 using KidProEdu.Application.Hubs;
+using KidProEdu.Application.Utils;
+using Hangfire;
+using HangfireBasicAuthenticationFilter;
+using KidProEdu.API.Controllers;
 
 namespace KidProEdu.API
 {
@@ -30,6 +34,14 @@ namespace KidProEdu.API
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddSignalR();
+            builder.Services.AddHangfire((sp, config) =>
+            {
+                var connectionString = sp.GetRequiredService<IConfiguration>().GetConnectionString("Development");
+                config.UseSqlServerStorage(connectionString);
+                RecurringJob.AddOrUpdate<IAdviseRequestService>("send-email-job", x => x.AutoSendEmail(), "0 0 * * *");
+                RecurringJob.AddOrUpdate<IEquipmentService>("return-email-job", x => x.AutoCheckReturn(), "0 0 * * *");
+            });
+            builder.Services.AddHangfireServer();
 
             //CORS
             var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -40,7 +52,7 @@ namespace KidProEdu.API
                                   {
                                       policy.WithOrigins("http://localhost:5173",
                                                         "http://127.0.0.1:5173",
-                                                        "https://kid-pro-edu.netlify.app"
+                                                        "https://kid-pro-edu-v3.netlify.app"
                                                           )
                                                             //.AllowAnyOrigin()
                                                             .AllowAnyHeader()
@@ -111,7 +123,6 @@ namespace KidProEdu.API
             builder.Services.AddScoped<ITagRepository, TagRepository>();
             builder.Services.AddScoped<ILocationRepository, LocationRepository>();
             builder.Services.AddScoped<ICategoryEquipmentRepository, CategoryEquipmentRepository>();
-            builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
             builder.Services.AddScoped<IRoomRepository, RoomRepository>();
             builder.Services.AddScoped<IEquipmentRepository, EquipmentRepository>();
             builder.Services.AddScoped<IBlogRepository, BlogRepository>();
@@ -123,19 +134,38 @@ namespace KidProEdu.API
             builder.Services.AddScoped<ILessonRepository, LessonRepository>();
             builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
-            builder.Services.AddScoped<ISemesterCourseRepository, SemesterCourseRepository>();
             builder.Services.AddScoped<IRequestRepository, RequestRepository>();
             builder.Services.AddScoped<IClassRepository, ClassRepository>();
             builder.Services.AddScoped<IRequestUserAccountRepository, RequestUserAccountRepository>();
-            builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
+            builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
             builder.Services.AddScoped<ILogEquipmentRepository, LogEquipmentRepository>();
             builder.Services.AddScoped<ILogEquipmentRepository, LogEquipmentRepository>();
             builder.Services.AddScoped<IAdviseRequestRepository, AdviseRequestRepository>();
             builder.Services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
             builder.Services.AddScoped<IDivisionUserAccountRepository, DivisionUserAccountRepository>();
+            builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
+            builder.Services.AddScoped<ISlotRepository, SlotRepository>();
+            builder.Services.AddScoped<IContractRepository, ContractRepository>();
+            builder.Services.AddScoped<IConfigJobTypeRepository, ConfigJobTypeRepository>();
+            builder.Services.AddScoped<ISkillRepository, SkillRepository>();
+            builder.Services.AddScoped<ISkillCertificateRepository, SkillCertificateRepository>();
+            builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+            builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
+            builder.Services.AddScoped<ITeachingClassHistoryRepository, TeachingClassHistoryRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+            builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+            builder.Services.AddScoped<IScheduleRoomRepository, ScheduleRoomRepository>();
+            builder.Services.AddScoped<IExamRepository, ExamRepository>();
+            builder.Services.AddScoped<IChildrenAnswerRepository, ChildrenAnswerRepository>();
+            builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+            builder.Services.AddScoped<IConfigPointMultiplierRepository, ConfigPointMultiplierRepository>();
+            builder.Services.AddScoped<ICertificateRepository, CertificateRepository>();
             #endregion
 
             #region DIService
+            builder.Services.AddScoped<QRCodeUtility>();
+
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IClaimsService, ClaimsService>();
@@ -143,7 +173,6 @@ namespace KidProEdu.API
             builder.Services.AddScoped<ITagService, TagService>();
             builder.Services.AddScoped<ILocationService, LocationService>();
             builder.Services.AddScoped<ICategoryEquipmentService, CategoryEquipmentService>();
-            builder.Services.AddScoped<ISemesterService, SemesterService>();
             builder.Services.AddScoped<IRoomService, RoomService>();
             builder.Services.AddScoped<IEquipmentService, EquipmentService>();
             builder.Services.AddScoped<IBlogService, BlogService>();
@@ -155,15 +184,29 @@ namespace KidProEdu.API
             builder.Services.AddScoped<ILessonService, LessonService>();
             builder.Services.AddScoped<ICourseService, CourseService>();
             builder.Services.AddScoped<IQuestionService, QuestionService>();
-            builder.Services.AddScoped<ISemesterCourseService, SemesterCourseService>();
             builder.Services.AddScoped<IRequestService, RequestService>();
             builder.Services.AddScoped<IClassService, ClassService>();
             builder.Services.AddScoped<IRequestUserAccountService, RequestUserAccountService>();
-            builder.Services.AddScoped<IDocumentService, DocumentService>();
+            builder.Services.AddScoped<IResourceService, ResourceService>();
             builder.Services.AddScoped<ILogEquipmentService, LogEquipmentService>();
             builder.Services.AddScoped<IAdviseRequestService, AdviseRequestService>();
             builder.Services.AddScoped<IDivisionUserAccountService, DivisionUserAccountService>();
             builder.Services.AddScoped<IEnrollmentServices, EnrollmentServices>();
+            builder.Services.AddScoped<ISlotService, SlotService>();
+            builder.Services.AddScoped<IScheduleService, ScheduleService>();
+            builder.Services.AddScoped<IContractService, ContractService>();
+            builder.Services.AddScoped<IConfigJobTypeService, ConfigJobTypeService>();
+            builder.Services.AddScoped<ISkillService, SkillService>();
+            builder.Services.AddScoped<ISkillCertificateService, SkillCertificateService>();
+            builder.Services.AddScoped<IAttendanceService, AttendanceService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<IOrderDetailService, OrderDetailService>();
+            builder.Services.AddScoped<ITransactionService, TransactionService>();
+            builder.Services.AddScoped<IExamService, ExamService>();
+            builder.Services.AddScoped<IChildrenAnswerService, ChildrenAnswerService>();
+            builder.Services.AddScoped<IFeedbackService, FeedbackService>();
+            builder.Services.AddScoped<IConfigPointMultiplierService, ConfigPointMultiplierService>();
+            builder.Services.AddScoped<ICertificateService, CertificateService>();
             #endregion
 
             builder.Services.AddAutoMapper(typeof(Program));
@@ -209,6 +252,20 @@ namespace KidProEdu.API
             {
                 endpoints.MapHub<NotificationHub>("/notificationHub");
             });*/
+
+            app.UseHangfireDashboard("/hangfire", new DashboardOptions
+            {
+                DashboardTitle = "KidPro's Education Dashboard",
+                Authorization = new[]
+                {
+                    new HangfireCustomBasicAuthenticationFilter
+                    {
+                        User= "admin",
+                        Pass = "admin123"
+                    }
+                }
+            });
+            app.UseHangfireServer();
 
             app.MapControllers();
 

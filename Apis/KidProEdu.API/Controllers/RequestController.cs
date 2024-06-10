@@ -1,5 +1,6 @@
 ﻿using KidProEdu.Application.Interfaces;
 using KidProEdu.Application.ViewModels.RequestViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KidProEdu.API.Controllers
@@ -18,19 +19,62 @@ namespace KidProEdu.API.Controllers
         /*[Authorize(Roles = ("Admin"))]*/
         public async Task<IActionResult> Requests()
         {
-            return Ok(await _requestService.GetRequests());
+            try
+            {
+                return Ok(await _requestService.GetRequests());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
         /*[Authorize(Roles = ("Admin"))]*/
         public async Task<IActionResult> Request(Guid id)
         {
-            var Request = await _requestService.GetRequestById(id);
-            if (Request == null)
+            try
             {
-                return NotFound();
+                var Request = await _requestService.GetRequestById(id);
+                if (Request == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(Request);
             }
-            return Ok(Request);
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetRequestByUser/{id}")]
+        [Authorize(Roles = ("Admin, Manager, Staff, Parent, Teacher"))]
+        public async Task<IActionResult> GetRequestByUserId(Guid id)
+        {
+            try
+            {
+                return Ok(await _requestService.GetRequestByUser(id));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetRequestByReciever/{id}")]
+        [Authorize(Roles = ("Admin, Manager, Staff, Teacher"))]
+        public async Task<IActionResult> GetRequestByRecieverId(Guid id)
+        {
+            try
+            {
+                return Ok(await _requestService.GetRequestByReceiver(id));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("GetRequestByUser/{id}")]
@@ -41,7 +85,7 @@ namespace KidProEdu.API.Controllers
         }
 
         [HttpPost]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = ("Admin, Manager, Staff, Teacher, Parent"))]
         public async Task<IActionResult> PostRequest(CreateRequestViewModel createRequestViewModel)
         {
             try
@@ -63,7 +107,7 @@ namespace KidProEdu.API.Controllers
         }
 
         [HttpPut]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = ("Admin, Manager, Staff, Teacher, Parent"))]
         public async Task<IActionResult> PutRequest(UpdateRequestViewModel updateRequestViewModel)
         {
             try
@@ -85,7 +129,7 @@ namespace KidProEdu.API.Controllers
         }
 
         [HttpDelete]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = ("Admin, Manager, Staff, Teacher, Parent"))]
         public async Task<IActionResult> DeleteRequest(Guid RequestId)
         {
             try
@@ -107,7 +151,7 @@ namespace KidProEdu.API.Controllers
         }
 
         [HttpPut("ChangeStatusRequest")]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = ("Admin, Manager, Staff, Teacher"))]
         public async Task<IActionResult> ChangeStatusRequest(ChangeStatusRequestViewModel changeStatusRequestViewModel)
         {
             try

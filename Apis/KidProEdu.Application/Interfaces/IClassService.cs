@@ -1,5 +1,6 @@
 ﻿using KidProEdu.Application.ViewModels.ClassViewModels;
 using KidProEdu.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +16,13 @@ namespace KidProEdu.Application.Interfaces
         Task<bool> UpdateClass(UpdateClassViewModel updateClassViewModel);
         Task<ClassViewModel> GetClassById(Guid ClassId);
         Task<bool> DeleteClass(Guid ClassId);
-        Task<bool> ChangeStatusClass(ChangeStatusClassViewModel changeStatusClassViewModel);
-        Task<List<ClassViewModel>> GetClassBySemester(Guid id);
+        Task<List<ChildrenPassedViewModel>> ChangeStatusClass(ChangeStatusClassViewModel changeStatusClassViewModel);
         Task<List<ClassChildrenViewModel>> GetChildrenByClassId(Guid classId);
+        Task<Stream> ExportExcelFileAsync(Guid classId);
+        Task<bool> ImportScoreExcelFileAsync(IFormFile formFile);
+        Task<bool> TestSendAttachEmail();
+        Task<bool> ChangeTeacherForClass(ChangeTeacherForClassViewModel changeTeacherForClassViewModel);
+        Task<List<ClassViewModel>> GetListClassTeachingByTeacher(Guid teacherId);
+        Task<List<ClassViewModel>> GetListClassStatusPending();
     }
 }

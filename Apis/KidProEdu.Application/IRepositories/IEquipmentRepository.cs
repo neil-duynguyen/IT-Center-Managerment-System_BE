@@ -1,5 +1,6 @@
 ﻿using KidProEdu.Application.Repositories;
 using KidProEdu.Domain.Entities;
+using KidProEdu.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,9 @@ namespace KidProEdu.Application.IRepositories
 
     public interface IEquipmentRepository : IGenericRepository<Equipment>
     {
-        Task<List<Equipment>> GetEquipmentByName(string name);
-        Task<List<Equipment>> GetEquipmentByCode(string code);
+        Task<List<Equipment>> GetListEquipmentByName(string name);
+        Task<List<Equipment>> GetListEquipmentByCateId(Guid cateId);
+        Task<List<Equipment>> GetListEquipmentByCateIdAndStatus(Guid cateId, StatusOfEquipment status);
+        Task<List<Equipment>> GetListEquipmentByStatus(StatusOfEquipment status);
     }
 }

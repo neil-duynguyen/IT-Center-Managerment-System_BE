@@ -12,11 +12,13 @@ namespace KidProEdu.Domain.Entities
     {
         [ForeignKey("UserAccount")]
         public Guid UserId { get; set; }
+        public string? OrderNumber { get; set; }
         public DateTime OrderDate { get; set; }
         public double TotalAmount { get; set; }
         public StatusPayment PaymentStatus { get; set; }
+        public string? URLPayment { get; set; }
+        public string? EWalletMethod { get; set; }
         public virtual UserAccount UserAccount { get; set; }
         public IList<OrderDetail> OrderDetails { get; set; }
-        public IList<Transaction> Transactions { get; set; }
     }
 }

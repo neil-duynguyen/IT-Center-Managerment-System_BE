@@ -1,6 +1,7 @@
 ﻿using KidProEdu.Application.Interfaces;
 using KidProEdu.Application.ViewModels.LessonViewModels;
 using KidProEdu.Application.ViewModels.RatingViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,14 +18,13 @@ namespace KidProEdu.API.Controllers.Admin
         }
 
         [HttpGet("Lessons")]
-        /*[Authorize(Roles = ("Admin"))]*/
         public async Task<IActionResult> Lessons()
         {
             return Ok(await _lessonService.GetLessons());
         }
 
         [HttpPost]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = ("Admin"))]
         public async Task<IActionResult> PostLesson(CreateLessonViewModel createLessonViewModel)
         {
             try
@@ -39,14 +39,17 @@ namespace KidProEdu.API.Controllers.Admin
                     return BadRequest("Bài học đã được tạo thất bại.");
                 }
             }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
 
-        [HttpGet("{id}")]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [HttpGet("{id}")]       
         public async Task<IActionResult> Lesson(Guid id)
         {
             var rating = await _lessonService.GetLessonById(id);
@@ -57,8 +60,7 @@ namespace KidProEdu.API.Controllers.Admin
             return Ok(rating);
         }
 
-        [HttpGet("LessonByCourse/{courseId}")]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [HttpGet("LessonByCourse/{courseId}")]     
         public async Task<IActionResult> LessonByCourseId(Guid courseId)
         {
             var rating = await _lessonService.GetLessonsByCourseId(courseId);
@@ -70,7 +72,7 @@ namespace KidProEdu.API.Controllers.Admin
         }
 
         [HttpPut]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = ("Admin"))]
         public async Task<IActionResult> PutLesson(UpdateLessonViewModel updateLessonViewModel)
         {
             try
@@ -92,7 +94,7 @@ namespace KidProEdu.API.Controllers.Admin
         }
 
         [HttpDelete]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = ("Admin"))]
         public async Task<IActionResult> DeleteLesson(Guid id)
         {
             try

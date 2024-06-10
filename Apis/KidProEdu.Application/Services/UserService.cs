@@ -3,12 +3,16 @@ using AutoMapper.Execution;
 using KidProEdu.Application.Interfaces;
 using KidProEdu.Application.Utils;
 using KidProEdu.Application.Validations.Users;
+using KidProEdu.Application.ViewModels.AdviseRequestViewModels;
+using KidProEdu.Application.ViewModels.ChildrenViewModels;
 using KidProEdu.Application.ViewModels.LoginViewModel;
 using KidProEdu.Application.ViewModels.UserViewModels;
 using KidProEdu.Domain.Entities;
 using Microsoft.AspNetCore.Routing.Constraints;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System.Collections;
+using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 
@@ -21,6 +25,12 @@ namespace KidProEdu.Application.Services
         private readonly ICurrentTime _currentTime;
         private readonly IConfiguration _configuration;
         private readonly IClaimsService _claimsService;
+        public UserService(IMapper mapper, IUnitOfWork unitOfWork, IClaimsService claimsService)
+        {
+            _mapper = mapper;
+            _unitOfWork = unitOfWork;
+            _claimsService = claimsService;
+        }
 
         public UserService(IMapper mapper, IUnitOfWork unitOfWork, ICurrentTime currentTime, IConfiguration configuration, IClaimsService claimsService)
         {
@@ -31,13 +41,10 @@ namespace KidProEdu.Application.Services
             _claimsService = claimsService;
         }
 
+
         public async Task<LoginViewModel> LoginAsync(UserLoginViewModel userObject)
         {
             var user = await _unitOfWork.UserRepository.GetUserByUserNameAndPasswordHash(userObject.UserName, userObject.Password.Hash());
-            if (user == null)
-            {
-                throw new Exception("Tên đăng nhập hoặc mật khẩu không chính xác.");
-            }
 
             var token = user.GenerateJsonWebToken(_configuration["AppSettings:SecretKey"]);
 
@@ -66,11 +73,23 @@ namespace KidProEdu.Application.Services
              };*/
 
             var newUser = _mapper.Map<UserAccount>(userObject);
-            newUser.PasswordHash = newUser.PasswordHash.Hash();
+            newUser.PasswordHash = new String("User@123").Hash();
             newUser.Status = Domain.Enums.StatusUser.Enable;
-            newUser.LocationId = _unitOfWork.UserRepository.GetByIdAsync(_claimsService.GetCurrentUserId).Result.LocationId;
+            //newUser.LocationId = _unitOfWork.UserRepository.GetByIdAsync(_claimsService.GetCurrentUserId).Result.LocationId;
 
             await _unitOfWork.UserRepository.AddAsync(newUser);
+
+            if (userObject.createContractViewModel != null)
+            {
+                ContractService sv = new ContractService(_unitOfWork, _currentTime, _claimsService, _mapper);
+                await sv.CreateContract(userObject.createContractViewModel, newUser.Id);
+            }
+
+            SendEmailUtil.SendEmail(newUser.Email, "Thông báo đăng kí tài khoản KidProEdu",
+                "Thông tin tài khoản\n " +
+                "UserName: " + newUser.UserName +
+                "\nPassword: User@123");
+
 
             return await _unitOfWork.SaveChangeAsync() > 0 ? true : false;
         }
@@ -81,12 +100,12 @@ namespace KidProEdu.Application.Services
 
             var mapper = _mapper.Map<UserViewModel>(findUser);
 
-            if (findUser.Role.Id == new Guid("D5FA55C7-315D-4634-9C73-08DBBC3F3A54"))
+            if (findUser.Role.Name.Equals("Parent"))
             {
-            
+
                 var getChildren = _unitOfWork.ChildrenRepository.GetAllAsync().Result.Where(x => x.UserId == findUser.Id).ToList();
 
-                mapper.ChildrenProfiles = getChildren;
+                mapper.ChildrenProfiles = _mapper.Map<List<ChildrenViewModel>>(getChildren);
             }
 
             return findUser != null ? mapper : throw new Exception();
@@ -94,18 +113,43 @@ namespace KidProEdu.Application.Services
 
         public async Task<List<UserViewModel>> GetAllUser()
         {
-            var user = _unitOfWork.UserRepository.GetAllAsync().Result.Where(x => x.IsDeleted == false).OrderByDescending(x => x.CreationDate);
+            var listUser = await _unitOfWork.UserRepository.GetAllAsync();
 
-            return _mapper.Map<List<UserViewModel>>(user);
+            var getCurrentUserId = await _unitOfWork.UserRepository.GetByIdAsync(_claimsService.GetCurrentUserId);
+
+            List<UserAccount> users = new List<UserAccount>();
+
+            if (getCurrentUserId.Role.Name.Equals("Admin") && getCurrentUserId.UserName.Equals("Admin"))
+            {
+                users = listUser.Where(x => !x.IsDeleted).OrderByDescending(x => x.CreationDate).ToList();
+            }
+
+            if (getCurrentUserId.Role.Name.Equals("Admin") && !getCurrentUserId.UserName.Equals("Admin"))
+            {
+                users = listUser.Where(x => x.Role.Name.Equals("Manager") || x.Role.Name.Equals("Teacher") || x.Role.Name.Equals("Staff") || x.Role.Name.Equals("Parent") && !x.IsDeleted).OrderByDescending(x => x.CreationDate).ToList();
+            }
+
+            if (getCurrentUserId.Role.Name.Equals("Manager"))
+            {
+                users = listUser.Where(x => x.Role.Name.Equals("Teacher") || x.Role.Name.Equals("Staff") && !x.IsDeleted).OrderByDescending(x => x.CreationDate).ToList();
+            }
+
+            if (getCurrentUserId.Role.Name.Equals("Staff"))
+            {
+                users = listUser.Where(x => x.Role.Name.Equals("Parent") && !x.IsDeleted && x.CreatedBy == _claimsService.GetCurrentUserId).OrderByDescending(x => x.CreationDate).ToList();
+            }
+
+            return _mapper.Map<List<UserViewModel>>(users);
         }
 
         public async Task<List<UserViewModel>> GetUserByRoleId(Guid Id)
         {
-            var user = _unitOfWork.UserRepository.GetAllAsync().Result.Where(x => x.RoleId == Id && x.Status.ToString().Equals("Enable"));
+            var user = _unitOfWork.UserRepository.GetAllAsync().Result.Where(x => x.RoleId == Id && x.IsDeleted == false).OrderByDescending(x => x.CreationDate);
 
             return _mapper.Map<List<UserViewModel>>(user);
         }
 
+        // vừa change pass vừa reset pass
         public async Task<UserViewModel> ChangePassword(ChangePasswordViewModel changePasswordViewModel)
         {
             var user = await _unitOfWork.UserRepository.GetByIdAsync(changePasswordViewModel.id) ?? throw new Exception("Không tìm thấy người dùng");
@@ -114,13 +158,37 @@ namespace KidProEdu.Application.Services
             {
                 if (!user.PasswordHash.Equals(changePasswordViewModel.currentPassword.Hash()))
                     throw new Exception("Mật khẩu hiện tại không đúng");
+                else
+                {
+                    user.PasswordHash = (changePasswordViewModel.newPasswordHash).Hash();
+
+                    _unitOfWork.UserRepository.Update(user);
+
+                    return await _unitOfWork.SaveChangeAsync() > 0 ? _mapper.Map<UserViewModel>(user) : throw new Exception("Thay đổi mật khẩu không thành công");
+                }
             }
+            else
+            {
+                user.PasswordHash = (changePasswordViewModel.newPasswordHash).Hash();
 
-            user.PasswordHash = (changePasswordViewModel.newPasswordHash).Hash();
+                _unitOfWork.UserRepository.Update(user);
 
-            _unitOfWork.UserRepository.Update(user);
+                if (await _unitOfWork.SaveChangeAsync() > 0)
+                {
+                    await SendEmailUtil.SendEmail(user.Email, "Thông báo bảo mật tài khoản",
+                        "KidPro thông báo, \n\n" +
+                        "Tài khoản của quý khách vừa được đặt lại mật khẩu, mật khẩu hiện tại của bạn là: User@123\n" +
+                        "Trân trọng, \n" +
+                        "KidPro Education!");
+                    return _mapper.Map<UserViewModel>(user);
 
-            return await _unitOfWork.SaveChangeAsync() > 0 ? _mapper.Map<UserViewModel>(user) : throw new Exception("Thay đổi mật khẩu không thành công");
+                }
+                else
+                {
+                    throw new Exception("Đặt lại mật khẩu không thành công");
+
+                }
+            }
         }
 
         public async Task<bool> UpdateUser(UpdateUserViewModel updateUserViewModel, params Expression<Func<UserAccount, object>>[] uniqueProperties)
@@ -192,5 +260,22 @@ namespace KidProEdu.Application.Services
             return await _unitOfWork.SaveChangeAsync() > 0 ? true : throw new Exception("Cập nhật trạng thái người dùng thất bại");
         }
 
+        public async Task<List<UserViewModel>> GetTeacherFree()
+        {
+            List<UserViewModel> listUser = new();
+
+            var listTeacher = _unitOfWork.UserRepository.GetAllAsync().Result.Where(x => x.Role.Name == "Teacher").ToList();
+
+            foreach (var item in listTeacher)
+            {
+                var checkFree = await _unitOfWork.TeachingClassHistoryRepository.GetClassByTeacherId(item.Id);
+                if (checkFree.IsNullOrEmpty())
+                {
+                    listUser.Add(_mapper.Map<UserViewModel>(item));
+                }
+            }
+
+            return listUser;
+        }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using KidProEdu.Application.Interfaces;
+using KidProEdu.Application.Utils;
 using KidProEdu.Application.ViewModels.AdviseRequestViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KidProEdu.API.Controllers
@@ -16,26 +18,64 @@ namespace KidProEdu.API.Controllers
 
         [HttpGet("AdviseRequests")]
         /*[Authorize(Roles = ("Admin"))]*/
-        public async Task<IActionResult> Locations()
+        public async Task<IActionResult> AdviseRequests()
         {
-            return Ok(await _adviseRequestService.GetAdviseRequests());
+            try
+            {
+                return Ok(await _adviseRequestService.GetAdviseRequests());
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e.Message);
+            }
         }
 
         [HttpGet("{id}")]
         /*[Authorize(Roles = ("Admin"))]*/
-        public async Task<IActionResult> Location(Guid id)
+        public async Task<IActionResult> AdviseRequest(Guid id)
         {
-            var result = await _adviseRequestService.GetAdviseRequestById(id);
-            if (result == null)
+            try
             {
-                return NotFound();
+                var result = await _adviseRequestService.GetAdviseRequestById(id);
+                if (result == null)
+                {
+                    return NotFound();
+                }
+                return Ok(result);
             }
-            return Ok(result);
+            catch (Exception e)
+            {
+
+                return BadRequest(e.Message);
+            }
+
+        }
+        
+        [HttpGet("GetTestDate/{testDate}")]
+        /*[Authorize(Roles = ("Admin"))]*/
+        public async Task<IActionResult> TestDate(DateTime testDate)
+        {
+            try
+            {
+                var result = await _adviseRequestService.GetAdviseRequestByTestDate(testDate);
+                if (result == null)
+                {
+                    return NotFound();
+                }
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e.Message);
+            }
+
         }
 
         [HttpPost]
-        /*[Authorize(Roles = ("Admin"))]*/
-        public async Task<IActionResult> PostLocation(CreateAdviseRequestViewModel createAdviseRequestViewModel)
+        /*[Authorize(Roles = ("Admin, Manager, Staff"))]*/
+        public async Task<IActionResult> PostAdviseRequest(CreateAdviseRequestViewModel createAdviseRequestViewModel)
         {
             try
             {
@@ -56,8 +96,8 @@ namespace KidProEdu.API.Controllers
         }
 
         [HttpPut]
-        /*[Authorize(Roles = ("Admin"))]*/
-        public async Task<IActionResult> PutLocation(UpdateAdviseRequestViewModel updateAdviseRequestViewModel)
+        [Authorize(Roles = ("Admin, Manager, Staff, Parent"))]
+        public async Task<IActionResult> PutAdviseRequest(UpdateAdviseRequestViewModel updateAdviseRequestViewModel)
         {
             try
             {
@@ -78,8 +118,8 @@ namespace KidProEdu.API.Controllers
         }
 
         [HttpDelete]
-        /*[Authorize(Roles = ("Admin"))]*/
-        public async Task<IActionResult> DeleteLocation(Guid id)
+        [Authorize(Roles = ("Admin, Manager, Staff, Parent"))]
+        public async Task<IActionResult> DeleteAdviseRequest(Guid id)
         {
             try
             {
@@ -92,6 +132,21 @@ namespace KidProEdu.API.Controllers
                 {
                     return BadRequest("Yêu cầu tư vấn đã được xóa thất bại.");
                 }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetAdviseRequestByUserId/{id}")]
+        public async Task<IActionResult> GetAdviseRequestByUserId(Guid id)
+        {
+            try
+            {
+                var listRequest = await _adviseRequestService.GetAdviseRequestByUserId(id);
+
+                return Ok(listRequest);
             }
             catch (Exception ex)
             {

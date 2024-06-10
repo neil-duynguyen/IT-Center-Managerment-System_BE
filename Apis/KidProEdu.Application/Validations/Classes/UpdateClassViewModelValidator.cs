@@ -15,16 +15,16 @@ namespace KidProEdu.Application.Validations.Classes
         {
             RuleFor(x => x.Id).NotNull().NotEmpty().WithMessage("Id lớp không thể bỏ trống");
             RuleFor(x => x.ClassCode).NotNull().NotEmpty().WithMessage("Mã lớp không thể bỏ trống");
-            RuleFor(x => x.StartDate).NotEmpty().WithMessage("Ngày bắt đầu không thể bỏ trống")
+            /*RuleFor(x => x.StartDate).NotEmpty().WithMessage("Ngày bắt đầu không thể bỏ trống")
                 .GreaterThan(DateTime.Now.Date).WithMessage("Ngày bắt đầu không thể trước thời gian hiện tại");
             RuleFor(x => x.EndDate).NotEmpty().WithMessage("Ngày kết thúc không thể bỏ trống")
-                .GreaterThan(x => x.StartDate).WithMessage("Ngày kết thúc phải sau ngày bắt đầu");
+                .GreaterThan(x => x.StartDate).WithMessage("Ngày kết thúc phải sau ngày bắt đầu");*/
             RuleFor(x => x.MaxNumber).NotNull().WithMessage("Số lượng học sinh tối đa không thể bỏ trống")
                 .GreaterThan(0).WithMessage("Số lượng học sinh tối đa phải lớn hơn 0")
                 .GreaterThanOrEqualTo(x => x.ExpectedNumber)
-                .WithMessage("Số lượng học sinh tối đa phải lớn hơn số lượng học sinh kỳ vọng");
-            RuleFor(x => x.ExpectedNumber).NotNull().WithMessage("Số lượng học sinh kỳ vọng không thể bỏ trống")
-                .GreaterThan(0).WithMessage("Số lượng học sinh kỳ vọng phải lớn hơn 0");
+                .WithMessage("Số lượng học sinh tối đa phải lớn hơn số lượng học sinh dự kiến");
+            RuleFor(x => x.ExpectedNumber).NotNull().WithMessage("Số lượng học sinh dự kiến không thể bỏ trống")
+                .GreaterThan(0).WithMessage("Số lượng học sinh dự kiến phải lớn hơn 0");
         }
     }
 }

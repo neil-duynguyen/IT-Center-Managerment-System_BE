@@ -16,7 +16,11 @@ namespace KidProEdu.Infrastructures.Repositories
             _dbContext = context;
         }
 
-
+        public override async Task<List<AdviseRequest>> GetAllAsync()
+        {
+            return await _dbSet.Include(x => x.UserAccount).Include(x => x.Location).Include(x => x.Slot)
+                .Where(x => x.IsTested == false).ToListAsync();
+        }
         public async Task<AdviseRequest> GetAdviseRequestByEmail(string email)
         {
             var adviseRequests = await _dbContext.AdviseRequest
@@ -31,6 +35,15 @@ namespace KidProEdu.Infrastructures.Repositories
             var adviseRequests = await _dbContext.AdviseRequest
                 .Where(x => x.Phone.ToLower() == phone.ToLower() && x.IsDeleted == false)
                 .FirstOrDefaultAsync();
+
+            return adviseRequests;
+        }
+
+        public async Task<List<AdviseRequest>> GetAdviseRequestByTestDate(DateTime testDate)
+        {
+            var adviseRequests = await _dbContext.AdviseRequest
+                .Where(x => x.TestDate.Date == testDate.Date && x.IsDeleted == false)
+                .OrderByDescending(x => x.TestDate).ToListAsync();
 
             return adviseRequests;
         }
@@ -67,6 +80,14 @@ namespace KidProEdu.Infrastructures.Repositories
                 default:
                     throw new ArgumentException($"Property {propertyName} is not supported.");
             }
+        }
+
+        public async Task<List<AdviseRequest>> GetAdviseRequestByUserId(Guid id)
+        {
+            var adviseRequest = await _dbContext.AdviseRequest.Where(x => x.UserId == id && x.IsDeleted == false)
+                .OrderByDescending(x => x.CreationDate).ToListAsync();
+
+            return adviseRequest;
         }
     }
 }

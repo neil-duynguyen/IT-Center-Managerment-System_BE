@@ -1,5 +1,8 @@
 ﻿using KidProEdu.Application.Interfaces;
+using KidProEdu.Application.Services;
 using KidProEdu.Application.ViewModels.ClassViewModels;
+using KidProEdu.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KidProEdu.API.Controllers.Manager
@@ -15,14 +18,14 @@ namespace KidProEdu.API.Controllers.Manager
         }
 
         [HttpGet("Classes")]
-        /*[Authorize(Roles = ("Admin"))]*/
+        /*[Authorize(Roles = "Manager")]*/
         public async Task<IActionResult> Classes()
         {
             return Ok(await _classService.GetClasses());
         }
 
         [HttpGet("{id}")]
-        /*[Authorize(Roles = ("Admin"))]*/
+        /*[Authorize(Roles = "Manager")]*/
         public async Task<IActionResult> Class(Guid id)
         {
             var Class = await _classService.GetClassById(id);
@@ -46,7 +49,7 @@ namespace KidProEdu.API.Controllers.Manager
         }
 
         [HttpPost]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = "Admin, Manager")]
         public async Task<IActionResult> PostClass(CreateClassViewModel createClassViewModel)
         {
             try
@@ -68,7 +71,7 @@ namespace KidProEdu.API.Controllers.Manager
         }
 
         [HttpPut]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = "Admin, Manager")]
         public async Task<IActionResult> PutClass(UpdateClassViewModel updateClassViewModel)
         {
             try
@@ -90,7 +93,7 @@ namespace KidProEdu.API.Controllers.Manager
         }
 
         [HttpDelete]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = "Admin, Manager")]
         public async Task<IActionResult> DeleteClass(Guid ClassId)
         {
             try
@@ -112,20 +115,13 @@ namespace KidProEdu.API.Controllers.Manager
         }
 
         [HttpPut("ChangeStatusClass")]
-        /*[Authorize(Roles = ("Admin"))]*/
+        [Authorize(Roles = "Manager")]
         public async Task<IActionResult> ChangeStatusClass(ChangeStatusClassViewModel changeStatusClassViewModel)
         {
             try
             {
                 var result = await _classService.ChangeStatusClass(changeStatusClassViewModel);
-                if (result)
-                {
-                    return Ok("Lớp đã được cập nhật trạng thái thành công.");
-                }
-                else
-                {
-                    return BadRequest("Lớp cập nhật trạng thái thất bại.");
-                }
+                return Ok(result);
             }
             catch (Exception ex)
             {
@@ -138,6 +134,90 @@ namespace KidProEdu.API.Controllers.Manager
         {
             var result = await _classService.GetChildrenByClassId(classId);
             return Ok(result);
+        }
+
+        [HttpGet("ExportExcelFile/{classId}")]
+        public async Task<IActionResult> ExportExcelFile(Guid classId) => File(await _classService.ExportExcelFileAsync(classId),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "InputScore.xlsx");
+
+        [HttpPost("ImportScoreExcelFile")]
+        [Authorize(Roles = "Teacher")]
+        public async Task<IActionResult> ImportScoreExcelFile(IFormFile formFile)
+        {
+            try
+            {
+                var result = await _classService.ImportScoreExcelFileAsync(formFile);
+                return Ok("Nhập điểm thành công");
+            }
+            catch (InvalidDataException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("SendAttachEmail")]
+        public async Task<IActionResult> SendAttachEmail()
+        {
+            try
+            {
+                var result = await _classService.TestSendAttachEmail();
+                return Ok(result);
+
+            }
+            catch (Exception e)
+            {
+
+                throw new Exception(e.Message);
+            }
+        }
+
+        [HttpPut("ChangeTeacherForClass")]
+        public async Task<IActionResult> ChangeTeacherForClass(ChangeTeacherForClassViewModel changeTeacherForClassViewModel)
+        {
+            try
+            {
+                var result = await _classService.ChangeTeacherForClass(changeTeacherForClassViewModel);
+                return Ok(result);
+
+            }
+            catch (Exception e)
+            {
+
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpGet("GetListClassTeachingByTeacher/{teacherId}")]
+        public async Task<IActionResult> GetListClassTeachingByTeacher(Guid teacherId)
+        {
+            try
+            {
+                return Ok(await _classService.GetListClassTeachingByTeacher(teacherId));
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("GetListClassStatusPending")]
+        public async Task<IActionResult> GetListClassStatusPending()
+        {
+            try
+            {
+                return Ok(await _classService.GetListClassStatusPending());
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

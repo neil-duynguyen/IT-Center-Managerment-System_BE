@@ -11,5 +11,7 @@ namespace KidProEdu.Application.IRepositories
     public interface ICourseRepository : IGenericRepository<Course>
     {
         Task<bool> CheckNameExited(string name);
+        Task<List<Course>> GetListCourseByChildrenId(Guid childrenId);
+        Task<int> GetTotalCourses(DateTime startDate, DateTime endDate);
     }
 }

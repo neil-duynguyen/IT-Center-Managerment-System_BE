@@ -58,6 +58,10 @@ namespace KidProEdu.Application.Services
 
             if (result == null)
                 throw new Exception("Không tìm thấy phòng này");
+            else if (result.Status == Domain.Enums.StatusOfRoom.Used)
+            {
+                throw new Exception("Không thể xóa phòng, phòng hiện đang được sử dụng");
+            }
             else
             {
                 _unitOfWork.RoomRepository.SoftRemove(result);
@@ -95,6 +99,32 @@ namespace KidProEdu.Application.Services
             if (room == null)
             {
                 throw new Exception("Không tìm thấy phòng");
+            }
+            else if (room.Status != updateRoomViewModel.Status)
+            {
+                switch (updateRoomViewModel.Status)
+                {
+                    case Domain.Enums.StatusOfRoom.Empty:
+                        if (room.Status != Domain.Enums.StatusOfRoom.NotAllow)
+                        {
+                            throw new Exception("Chỉ có thể chuyển trạng thái từ NotAllow thành Empty");
+                        }
+                        break;
+                    case Domain.Enums.StatusOfRoom.Used:
+                        if (room.Status != Domain.Enums.StatusOfRoom.Empty)
+                        {
+                            throw new Exception("Chỉ có thể chuyển trạng thái từ Empty thành Used");
+                        }
+                        break;
+                    case Domain.Enums.StatusOfRoom.NotAllow:
+                        if (room.Status != Domain.Enums.StatusOfRoom.Empty)
+                        {
+                            throw new Exception("Chỉ có thể chuyển trạng thái từ Empty sang NotAllow");
+                        }
+                        break;
+                    default:
+                        break;
+                }
             }
 
             var existingRoom = await _unitOfWork.RoomRepository.GetRoomByName(updateRoomViewModel.Name);
